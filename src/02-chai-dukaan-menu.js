@@ -28,5 +28,9 @@
  *   // => ""
  */
 export function formatChaiMenu(items) {
-  // Your code here
+  if(!Array.isArray(items)||items.length===0) return ""
+  let filteredobjects=items.filter(e=>typeof e.name==='string'&& e.name.trim().length!==0 && e.price>0);
+  let finalansarray=filteredobjects.map(e=>`${e.name.toUpperCase()} - Rs.${e.price}`)
+  let finalansstring=finalansarray.join(' | ')
+  return finalansstring
 }
