@@ -47,5 +47,65 @@
  *   //      frequentContact: "Swiggy", allAbove100: false, hasLargeTransaction: true }
  */
 export function analyzeUPITransactions(transactions) {
-  // Your code here
+  if (!Array.isArray(transactions) || transactions.length === 0) return null;
+  let filtered = transactions.filter(
+    (transaction) =>
+      transaction.amount > 0 && ((transaction.type === "debit") ||
+      transaction.type === "credit"),
+  );
+  if (filtered.length === 0) return null;
+  let totalCredit = 0;
+  let totalDebit = 0;
+  let totalSum=0
+  for (let transaction of filtered) {
+    if (transaction.type === "credit") {totalCredit += transaction.amount;totalSum+=transaction.amount}
+    else if (transaction.type === "debit") {totalDebit += transaction.amount;totalSum+=transaction.amount}
+  }
+  let netBalance = totalCredit - totalDebit;
+  let transactionCount = filtered.length;
+  let avgTransaction = Math.round(totalSum / transactionCount);
+  let sorted = filtered.sort((a, b) => b.amount - a.amount);
+  let highestTransaction = sorted[0];
+  let categoryBreakdown = {};
+  for (let obj of filtered) {
+    if (!categoryBreakdown[obj.category]) {
+      categoryBreakdown[obj.category] = obj.amount;
+    } else {
+      categoryBreakdown[obj.category] += obj.amount;
+    }
+  }
+  let aalu = {};
+  for (let obj of filtered) {
+    if (!aalu[obj.to]) {
+      aalu[obj.to] = 1;
+    } else {
+      aalu[obj.to] += 1
+    }
+  }
+  let frequentContact = null;
+  let max = 0;
+
+  for (let key in aalu) {
+    if (aalu[key] > max) {
+      max = aalu[key];
+      frequentContact = key;
+    }
+  }
+  
+
+  let allAbove100 = filtered.every((transaction) => transaction.amount > 100);
+  let hasLargeTransaction = filtered.some((transaction) => transaction.amount >= 5000);
+
+  return {
+    totalCredit,
+    totalDebit,
+    netBalance,
+    transactionCount,
+    avgTransaction,
+    highestTransaction,
+    categoryBreakdown,
+    frequentContact,
+    allAbove100,
+    hasLargeTransaction,
+  };
 }
