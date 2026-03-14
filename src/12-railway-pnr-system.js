@@ -72,4 +72,81 @@
  */
 export function processRailwayPNR(pnrData) {
   
+  if(pnrData===null || Array.isArray(pnrData) || typeof pnrData!=='object') return null;
+
+  let pnrFormatted=[]
+
+  if(typeof pnrData.pnr!=='string' || pnrData.pnr.length!==10 || !/^\d{10}$/.test(pnrData.pnr)) return null
+
+  pnrFormatted.push(pnrData.pnr.slice(0,3));
+  pnrFormatted.push(pnrData.pnr.slice(3,6));
+  pnrFormatted.push(pnrData.pnr.slice(6))
+  pnrFormatted=pnrFormatted.join("-")
+
+  if(!pnrData.train || typeof pnrData.train !== "object") return null;
+
+  let trainInfo=`Train: ${pnrData.train.number} - ${pnrData.train.name} | ${pnrData.train.from} → ${pnrData.train.to} | Class: ${pnrData.classBooked}`
+
+  if(!Array.isArray(pnrData.passengers)||pnrData.passengers.length===0) return null;
+
+  let passengers=pnrData.passengers.map(elem=>{
+    let statusLabel;
+
+    if(elem.current.startsWith("B")|| elem.current.startsWith("S")) statusLabel = "CONFIRMED";
+    else if(elem.current.startsWith("WL")) statusLabel = "WAITING";
+    else if(elem.current==="CAN") statusLabel = "CANCELLED";
+    else if(elem.current.startsWith("RAC")) statusLabel="RAC";
+
+    let isConfirmed=false;
+    if (statusLabel==="CONFIRMED") isConfirmed=true
+
+    return{
+      formattedName: elem.name.padEnd(20) + "(" + elem.age + "/" + elem.gender + ")",
+      bookingStatus:elem.booking,
+      currentStatus:elem.current,
+      statusLabel,
+      isConfirmed,
+    }
+  });
+  
+  let totalPassengers=passengers.length;
+
+  let confirmedarray=passengers.filter(elem=>elem.statusLabel==="CONFIRMED")
+  let confirmed=confirmedarray.length;
+
+  let waitingarray=passengers.filter(elem=>elem.statusLabel==="WAITING");
+  let waiting=waitingarray.length;
+
+  let cancelledarray=passengers.filter(elem=>elem.statusLabel==="CANCELLED");
+  let cancelled=cancelledarray.length;
+
+  let racarray=passengers.filter(elem=>elem.statusLabel==="RAC");
+  let rac=racarray.length;
+
+  let allConfirmed=passengers.every(elem=>elem.statusLabel==="CONFIRMED");
+
+  let anyWaiting=passengers.some(elem=>elem.statusLabel==="WAITING");
+
+  let summary={
+    totalPassengers,
+    confirmed,
+    waiting,
+    cancelled,
+    rac,
+    allConfirmed,
+    anyWaiting,
+  }
+
+  let chartPrepared = passengers
+    .filter(elem => elem.statusLabel !== "CANCELLED")
+    .every(elem => elem.statusLabel === "CONFIRMED");
+
+  return {
+    pnrFormatted,
+    trainInfo,
+    passengers,
+    summary,
+    chartPrepared
+  }
+
 }
